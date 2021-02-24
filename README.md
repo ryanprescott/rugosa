@@ -19,4 +19,4 @@ description=My home page.
 
 If this file were to be placed in the 'pages' directory of your Rugosa instance, you would already have your first home page. It's really that easy.
 
-Rugosa is designed with modern technologies in mind and therefore is not compatible with any PHP version before 7.4. The default theme is not compatible with Internet Explorer 8 or below.
+Rugosa is designed with modern technologies in mind and therefore is not compatible with any PHP version before 8.0. The default theme is not compatible with Internet Explorer 8 or below.
