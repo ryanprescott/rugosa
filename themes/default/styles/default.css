@@ -1,0 +1,125 @@
+* {
+	font-family: 'Source Sans Pro', sans-serif;
+}
+
+html {
+	overflow-y: scroll;
+	scroll-behavior: smooth;
+	background-color: #222;
+}
+
+body {
+	margin: auto;
+	background-color: #fff;
+}
+
+code {
+	display: block;
+	padding: 0.5rem;
+	background-color: #eee;
+	overflow-x: auto;
+}
+
+div#nav {
+	background-color: #eee;
+	box-shadow: 2px 0px 12px #aaa;
+	overflow-x: hidden;
+	overflow-y: scroll;
+	position: fixed;
+	top: 0px;
+	transition: width 0.5s;
+	max-height: 100vh;
+}
+
+div#nav ul#navitems {
+	overflow-x: hidden;
+	overflow-wrap: hidden;
+}
+
+div#nav ul a, div#header ul a {
+	text-decoration: none;
+	color: inherit;
+}
+
+div#nav ul li {
+	margin: 1rem;
+	font-size: 1rem;
+	font-weight: bold;
+	white-space: nowrap;
+}
+
+div#nav ul a:hover li {
+	color: #666;
+}
+
+#navtoggle ~ #nav {
+	width: 0;
+	overflow-y: hidden;
+}
+
+#navtoggle:checked ~ #nav {
+	width: 15rem;
+	overflow-y: auto;
+}
+
+@media screen and (max-width: 800px) {
+	#navtoggle:checked ~ #nav {
+		width: 100vw;
+	}
+}
+
+#navtoggle {
+	display: none;
+}
+
+label[for="navtoggle"] {
+	cursor: pointer;
+}
+
+#nav ul, #header ul {
+	margin: 0;
+	list-style-type: none;
+}
+
+#header {
+	padding: 0px 1rem;
+	box-sizing: border-box;
+	vertical-align: middle;
+}
+
+.navbutton {
+	padding-right: 1rem;
+	display: inline-block;
+}
+
+.logo {
+	display: inline-block;
+}
+
+div#content {
+	padding: 0 1rem;
+}
+
+div#nav ul#navitems {
+	padding: 0;
+}
+
+div#footer {
+	padding: .5rem 1rem;
+	border-top: 1px #aaa solid;
+}
+
+div#header {
+	box-shadow: 0px 1px 5px #aaa;
+	width: 100%;
+	position: sticky;
+	top: 0;
+	background-color: #eee;
+}
+
+
+
+form#search {
+	width: 100%;
+	padding: 0px 20px 0px 20px;
+}
