@@ -103,7 +103,7 @@ function(string $hook, $obj = null) use ($r) {
 
 $r->load_site = 
 function() use ($r) {
-	if ($r?->site instanceof Site) {
+	if (isset($r->site) && $r->site instanceof Site) {
 		trigger_error("load_site: A site has already been loaded.");
 	} else {
 		if (is_dir("site")) {
