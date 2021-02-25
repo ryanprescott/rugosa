@@ -38,21 +38,25 @@ register_shutdown_function(function() {
 
 spl_autoload_register(function($className) {
 	$rewritten_path = str_replace('\\', DIRECTORY_SEPARATOR, $className) . '.php';
-	require_once($rewritten_path);
+	@require_once($rewritten_path);
 });
 
 if (PHP_VERSION[0]<8) {
 	trigger_error("Rugosa is not compatible with PHP versions before 8.0. Please install the latest version of PHP.", E_USER_ERROR);
 }
 
-class Core extends Wrapper {};
+class Core {
+	public function __call($name, $arguments) {
+		return is_callable($this->{$name}) ? ($this->{$name})(...$arguments) : null;
+	}
+};
 
 $r = new Core;
 $r->version = new Version(0, 21, 2, 3);
 
 define('__DOCROOT__', $_SERVER['DOCUMENT_ROOT']);
 define('__RELROOT__', Path::diff(getcwd(), __DOCROOT__));
-define('__WEBROOT__', Path::combine('//',$_SERVER['HTTP_HOST'],$r->relroot));
+define('__WEBROOT__', Path::combine('//',$_SERVER['HTTP_HOST'],__RELROOT__));
 
 /*** Hooks ***/
 $r->available_hooks = [
@@ -72,7 +76,7 @@ $r->available_hooks = [
 	'head_tag',
 ];
 
-$r->hooks = new Wrapper;
+$r->hooks = new Core;
 foreach ($r->available_hooks as $hook) {
 	$r->hooks->{$hook} = new Hook;
 }

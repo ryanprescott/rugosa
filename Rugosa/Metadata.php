@@ -1,10 +1,7 @@
 <?php namespace Rugosa;
-
 class Metadata {
-
 const open = '/*--';
 const close = '--*/';
-
 static function from_string($string) {
     $begin = strpos($string, self::open);
     $end = strpos($string, self::close);
@@ -16,7 +13,6 @@ static function from_string($string) {
     }
     return false;
 }
-
 static function from_php_string($string) {
     foreach(token_get_all($string) as $token) {
         if (is_array($token) && $token[0] == T_COMMENT) { 
@@ -24,7 +20,6 @@ static function from_php_string($string) {
         }
     }
 }
-
 static function from_php_file($path) {
     if (file_exists($path)) {
         $string = file_get_contents($path);
@@ -38,6 +33,5 @@ static function from_php_file($path) {
         return false;
     }
 }
-
 }
 ?>

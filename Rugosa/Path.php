@@ -1,5 +1,4 @@
 <?php namespace Rugosa;
-
 class Path {
 	static function normalize($path) {
 		$path = str_replace('\\', '/', $path);
@@ -27,11 +26,5 @@ class Path {
 			return $path1;
 		}
 	}
-	static function up($path) {
-		$split = self::split($path);
-		array_pop($split);
-		return self::combine(...$split);
-	}
 }
-
 ?>
