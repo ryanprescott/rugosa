@@ -56,7 +56,15 @@ $r->version = new Version(0, 21, 2, 3);
 
 define('__DOCROOT__', $_SERVER['DOCUMENT_ROOT']);
 define('__RELROOT__', Path::diff(getcwd(), __DOCROOT__));
-define('__WEBROOT__', Path::combine('//',$_SERVER['HTTP_HOST'],__RELROOT__));
+define('__WEBROOT__', Path::combine('//',$_SERVER['HTTP_HOST'],$r->relroot));
+
+$r->backtrace = function() use ($r) {
+	$backtrace = debug_backtrace();
+	$str = '';
+	foreach($item as $backtrace) {
+		$str .= implode($item, ',') . '\n';
+	}
+};
 
 /*** Hooks ***/
 $r->available_hooks = [
@@ -76,7 +84,7 @@ $r->available_hooks = [
 	'head_tag',
 ];
 
-$r->hooks = new Core;
+$r->hooks = new Core();
 foreach ($r->available_hooks as $hook) {
 	$r->hooks->{$hook} = new Hook;
 }
@@ -122,7 +130,7 @@ function() use ($r) {
 
 $r->load_theme =
 function($path) use ($r) {
-	if (!$r->themes) {
+	if (!isset($r->themes)) {
 		$r->themes = new Collection;
 	}
 	if (is_dir($path)) {
@@ -167,7 +175,7 @@ function() use ($r) {
 
 $r->load_plugin =
 function($path) use ($r) {
-	if (!$r->plugins) {
+	if (!isset($r->plugins)) {
 		$r->plugins = new Collection;
 	}
 	if (is_dir($path)) {
@@ -214,7 +222,7 @@ function() use ($r) {
 
 $r->load_page =
 function($path) use ($r) {
-	if (!$r->pages) {
+	if (!isset($r->pages)) {
 		$r->pages = new Collection;
 	}
 	if (file_exists($path)) {

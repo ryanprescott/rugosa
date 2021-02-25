@@ -22,8 +22,6 @@ $r->hook('before_render_page', function() use ($r) {
 $r->hook('after_render_content', '<p id=\'howfast_display\'>&nbsp;</p>');
 
 $r->hook('after_render_page', function() use ($r) {
-	
-	$r->themes->add(new Page(["name"=>"test"]));
 	$r->howfast_end = microtime(true);
 	$r->howfast_elapsed = sprintf('%.5f', $r->howfast_end - $r->howfast_start);
 ?>

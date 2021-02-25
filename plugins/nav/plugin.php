@@ -7,7 +7,7 @@ description=Builds a navigation bar using your pages.;
 
 class Nav {
 	public function build($object = null) {
-		if ($object instanceof PageCollection) {
+		if ($object instanceof Collection) {
 			foreach ($object->items as $page) {
 				if ($page->title && $page->name && !$page->hidden) {
 ?>
