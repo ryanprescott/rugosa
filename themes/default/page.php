@@ -1,4 +1,4 @@
-<?
+<?php
 /*--
 name=page
 description=Default page

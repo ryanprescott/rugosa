@@ -37,7 +37,7 @@ register_shutdown_function(function() {
 // ini_set('display_errors', 0);
 
 spl_autoload_register(function($className) {
-	$rewritten_path = str_replace('\\', DIRECTORY_SEPARATOR, $className) . '.php';
+	$rewritten_path = str_replace('\\', '/', $className) . '.php';
 	@require_once($rewritten_path);
 });
 
@@ -56,7 +56,7 @@ $r->version = new Version(0, 21, 2, 3);
 
 define('__DOCROOT__', $_SERVER['DOCUMENT_ROOT']);
 define('__RELROOT__', Path::diff(getcwd(), __DOCROOT__));
-define('__WEBROOT__', Path::combine('//',$_SERVER['HTTP_HOST'],$r->relroot));
+define('__WEBROOT__', Path::combine('//',$_SERVER['HTTP_HOST'],__RELROOT__));
 
 $r->backtrace = function() use ($r) {
 	$backtrace = debug_backtrace();
@@ -116,7 +116,7 @@ function() use ($r) {
 					$r->hooks->after_load_site->execute();
 					return true;
 				} else {
-					trigger_error("load_site: Site could not be loaded. File 'site.php' did not contain a valid theme declaration.", E_USER_ERROR);
+					trigger_error("load_site: Site could not be loaded. File 'site.php' did not contain a valid site declaration.", E_USER_ERROR);
 				}
 			} else {
 				trigger_error("load_site: site.php does not exist.", E_USER_ERROR);

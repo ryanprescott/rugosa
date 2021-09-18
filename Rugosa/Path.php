@@ -2,7 +2,8 @@
 class Path {
 	static function normalize($path) {
 		$path = str_replace('\\', '/', $path);
-		$path = preg_replace("#(?!^)/+#", "\\1/", $path);
+		// Preserve protocols
+		$path = preg_replace('#(?<!^)/+#', '/', $path);
 		$path = rtrim($path, '/');
 		return $path;
 	}	

@@ -5,18 +5,20 @@ class Collection {
 	protected array $items = [];
 
 	public function add($item) {
-		$firstItem = reset($this->items);
 		if (!$item->name) {
 			trigger_error("Collection->add: Item name cannot be empty.");
 		} elseif (isset($this->items[$item->name])) {
 			trigger_error("Collection->add: Item '{$item->name}' is already present in Collection.");
 			return false;
-		} elseif (!$firstItem || get_class($item) === get_class($firstItem)) {
-			$this->items[$item->name] = $item;
-			return true;
 		} else {
-			trigger_error("Collection->add: Items added to this Collection must be instance of " . get_class($firstItem) . ". This is determined by the first item added to the Collection.");
-			return false;
+			$firstItemClass = (count($this->items) > 0) ? get_class(reset($this->items)) : false;
+			if (!$firstItemClass || get_class($item) === $firstItemClass) {
+				$this->items[$item->name] = $item;
+				return true;
+			} else {
+				trigger_error("Collection->add: Items added to this Collection must be instance of " . get_class($firstItem) . ". This is determined by the first item added to the Collection.");
+				return false;
+			}
 		}
 	}
 	

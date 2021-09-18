@@ -3,7 +3,7 @@ class Readonly {
 	protected $file;
 	protected $dir;
 	protected $fileurl;
-	protected $filedir;
+	protected $dirurl;
 	public function __construct($array = []) {
 		foreach($array as $key=>$value) {
 			$this->$key = $value;
