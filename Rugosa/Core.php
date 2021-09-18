@@ -52,7 +52,7 @@ class Core {
 };
 
 $r = new Core;
-$r->version = new Version(0, 21, 2, 3);
+$r->version = new Version(0, 21, 9, 3);
 
 define('__DOCROOT__', $_SERVER['DOCUMENT_ROOT']);
 define('__RELROOT__', Path::diff(getcwd(), __DOCROOT__));
