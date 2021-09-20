@@ -27,8 +27,7 @@ div#nav {
 	overflow-y: scroll;
 	position: fixed;
 	top: 0px;
-	transition: width 0.5s;
-	max-height: 100vh;
+	width: 100vw;
 }
 
 div#nav ul#navitems {
@@ -53,12 +52,12 @@ div#nav ul a:hover li {
 }
 
 #navtoggle ~ #nav {
-	width: 0;
+	max-height: 0;
 	overflow-y: hidden;
 }
 
 #navtoggle:checked ~ #nav {
-	width: 15rem;
+	max-height: 100vh;
 	overflow-y: auto;
 }
 
@@ -115,11 +114,4 @@ div#header {
 	position: sticky;
 	top: 0;
 	background-color: #eee;
-}
-
-
-
-form#search {
-	width: 100%;
-	padding: 0px 20px 0px 20px;
 }

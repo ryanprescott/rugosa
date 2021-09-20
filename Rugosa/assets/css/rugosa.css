@@ -26,8 +26,8 @@ span.rugosa {
 	display: inline-block;
 	background-image: url('/Rugosa/assets/img/rugosa.png');
 	background-size: 100% 100%;
-	min-width: 1rem;
-	min-height: 1rem;
+	min-width: 1em;
+	min-height: 1em;
 }
 
 /* Panels and Form Elements */

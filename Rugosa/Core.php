@@ -37,7 +37,7 @@ register_shutdown_function(function() {
 // ini_set('display_errors', 0);
 
 spl_autoload_register(function($className) {
-	$rewritten_path = str_replace('\\', '/', $className) . '.php';
+	$rewritten_path = str_replace('\\', '/', __DIR__ . '/../'. $className) . '.php';
 	@require_once($rewritten_path);
 });
 
@@ -47,7 +47,11 @@ if (PHP_VERSION[0]<8) {
 
 class Core {
 	public function __call($name, $arguments) {
-		return is_callable($this->{$name}) ? ($this->{$name})(...$arguments) : null;
+		if (is_callable($this->{$name})) {
+			return ($this->{$name})(...$arguments);
+		} else {
+			echo $this->{$name};
+		}
 	}
 };
 
@@ -56,7 +60,8 @@ $r->version = new Version(0, 21, 9, 3);
 
 define('__DOCROOT__', $_SERVER['DOCUMENT_ROOT']);
 define('__RELROOT__', Path::diff(getcwd(), __DOCROOT__));
-define('__WEBROOT__', Path::combine('//',$_SERVER['HTTP_HOST'],__RELROOT__));
+define('__WEBRELROOT__', Path::combine('//',$_SERVER['HTTP_HOST'],__RELROOT__));
+define('__WEBROOT__', Path::combine('//',$_SERVER['HTTP_HOST']));
 
 $r->backtrace = function() use ($r) {
 	$backtrace = debug_backtrace();
@@ -348,7 +353,7 @@ function() use ($r) {
 		} elseif ($r->page->content instanceof \Closure) {
 			($r->page->content)();
 		} elseif (is_string($r->page->content)) {
-			?><p><?=$r->page->content?></p><?php
+			echo $r->page->content;
 		}
 		$r->hooks->after_render_content->execute();
 		return true;
