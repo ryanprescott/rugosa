@@ -98,7 +98,7 @@ $r->hook =
 function(string $hook, $obj = null) use ($r) {
 	if ($r->hooks->{$hook}) {
 		if ($obj === null) {
-			return $r->hooks->{$hook}->execute();
+			return $r->hooks->{$hook}();
 		} else {
 			return $r->hooks->{$hook}->add($obj);
 		}
@@ -115,10 +115,10 @@ function() use ($r) {
 			if (file_exists("site/site.php")) {
 				$block = Metadata::from_php_file("site/site.php");
 				if (is_array($block)) {
-					$r->hooks->before_load_site->execute();
+					$r->hooks->before_load_site();
 					$site = new Site($block);
 					$r->site = $site;
-					$r->hooks->after_load_site->execute();
+					$r->hooks->after_load_site();
 					return true;
 				} else {
 					trigger_error("load_site: Site could not be loaded. File 'site.php' did not contain a valid site declaration.", E_USER_ERROR);
@@ -145,7 +145,6 @@ function($path) use ($r) {
 			if (is_array($block)) {
 				$theme = new Theme($block);
 				if ($r->themes->add($theme)) {
-					include_once($def);
 					return true;
 				} else {
 					trigger_error("load_theme: Theme '{$theme->name}' at '{$path}' could not be loaded either because it has no name, or it is a duplicate of an already loaded theme.");
@@ -327,7 +326,7 @@ $r->render_page =
 function() use ($r) {
 	if (isset($r->page) && $r->page instanceof Page) {
 
-		$r->hooks->before_render_page->execute();
+		$r->hooks->before_render_page();
 
 		$template = $r->page->template ?? $r->site->template ?? $r->theme->default_template ?? 'page';
 		$path = Path::combine($r->theme->dir, $template . '.php');
@@ -337,7 +336,7 @@ function() use ($r) {
 			trigger_error("render_page: File '{$path}' was not found.", E_USER_ERROR);
 		}
 		
-		$r->hooks->after_render_page->execute();
+		$r->hooks->after_render_page();
 	} else {
 		trigger_error('A page render was attempted before a page was selected. This can happen when a non-existent resource is requested and no 404 page is available.', E_USER_ERROR);
 	}
@@ -347,7 +346,7 @@ function() use ($r) {
 $r->render_content = 
 function() use ($r) {
 	if ($r->page) {
-		$r->hooks->before_render_content->execute();
+		$r->hooks->before_render_content();
 		if (!isset($r->page->content)) {
 			include_once($r->page->file);
 		} elseif ($r->page->content instanceof \Closure) {
@@ -355,7 +354,7 @@ function() use ($r) {
 		} elseif (is_string($r->page->content)) {
 			echo $r->page->content;
 		}
-		$r->hooks->after_render_content->execute();
+		$r->hooks->after_render_content();
 		return true;
 	} else {
 		return false;
@@ -368,7 +367,7 @@ function() use ($r) {
 	session_start();
 	ob_start();
 	$r->load_plugins();
-	$r->hooks->preload->execute();
+	$r->hooks->preload();
 	$r->load_site();
 	$r->load_pages();
 	$r->load_themes();
@@ -376,7 +375,7 @@ function() use ($r) {
 	$r->select_theme($r->page->theme, $r->site->theme, 'default');
 	$r->use_default_styles();
 	$r->render_page();
-	$r->hooks->postload->execute();
+	$r->hooks->postload();
 	ob_end_flush();
 	exit();
 };
@@ -390,31 +389,21 @@ function() use ($r) {
 
 $r->title_tag = 
 function() use ($r) {
-if ($r->site->title && $r->page->title) {
-$titleString = ($r->page->title ?? '') . (($r->page->title && $r->site->title) ? ' - ' : '') . ($r->site->title ?? '');
-if ($titleString) {
-?><title><?=$titleString?></title><?php
-}
-}
+	if ($r?->site?->title || $r?->page?->title) {
+		$titleString = ($r?->page?->title ?? '') . (($r?->page?->title && $r?->site?->title) ? ' - ' : '') . ($r?->site?->title ?? '');
+		echo "<title>$titleString</title>";
+	}
 };
 
 $r->head_tag =
 function() use ($r) {
-?>
-<head>
-<?php
-$r->hooks->head_tag->execute();
-?>
-</head>
-<?php
+	echo "<head>";
+	$r->hooks->head_tag();
+	echo "</head>";
 };
 
 $r->use_default_styles =
 function() use ($r) {
-$r->hook('head_tag', function() {
-?>
-<link rel='stylesheet' type='text/css' href='/Rugosa/assets/css/rugosa.css'>
-<?php
-});
-};
+	$r->hook('head_tag', "<link rel='stylesheet' type='text/css' href='" . __WEBROOT__ . "/Rugosa/assets/css/rugosa.css'>");
+}
 ?>

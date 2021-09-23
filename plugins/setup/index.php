@@ -35,17 +35,20 @@ $r->site = new Site([
     "title"=>"Rugosa Setup"
 ]);
 
-$r->load_themes();
-$r->select_theme("setup");
-
-$r->use_default_styles();
-
 $r->pages = new Collection();
 $r->pages->add(new Page([
     "name"=>"setup",
     "content"=>$r->setup_content
 ]));
 
+$r->themes = new Collection();
+$r->themes->add(new Theme([
+    "name"=>"setup",
+    "dir"=>__DIR__
+]));
+
+$r->use_default_styles();
+$r->select_theme("setup");
 $r->select_page("setup");
 
 $r->logo = "<h1><span class='rugosa'></span> Rugosa</h1>";

@@ -23,6 +23,9 @@ class Hook {
 		}
 	}
 
+	public function __invoke() {
+		$this->execute();
+	}
 }
 
 ?>
