@@ -133,6 +133,26 @@ function() use ($r) {
 	return false;
 };
 
+$r->import_templates =
+function($path) use ($r) {
+	$templateCollection = new Collection;
+	$templatesPath = Path::combine($path, "templates");
+	if (is_dir($path)) {
+		if (is_dir($templatesPath)) {
+			$templateFiles = array_diff(scandir($templatesPath), [".", ".."]);
+			foreach ($templateFiles as $templateFile) {
+				$def = Path::combine($templatesPath, $templateFile);
+				$block = Metadata::from_php_file($def);
+				if (is_array($block)) {
+					$template = new Template($block);
+					$templateCollection->add($template);
+				}
+			}
+		}
+	}
+	return $templateCollection;
+};
+
 $r->load_theme =
 function($path) use ($r) {
 	if (!isset($r->themes)) {
@@ -143,7 +163,10 @@ function($path) use ($r) {
 		if (file_exists($def)) {
 			$block = Metadata::from_php_file($def);
 			if (is_array($block)) {
+
+				$block["templates"] = $r->import_templates($path);
 				$theme = new Theme($block);
+				
 				if ($r->themes->add($theme)) {
 					return true;
 				} else {
@@ -322,18 +345,45 @@ function() use ($r) {
 	}
 };
 
+$r->select_template =
+function() use ($r) {
+	$args = func_get_args();
+	if ($args[0] instanceof Collection) {
+		$templateCollection = array_shift($args);
+	} elseif ($r?->theme?->templates instanceof Collection) {
+		$templateCollection = $r->theme->templates;
+	} else {
+		trigger_error('The default template collection was not available and no collection was specified.', E_USER_ERROR);
+		return false;
+	}
+
+	foreach($args as $selector) {
+		if (array_key_exists($selector, $templateCollection->items)) {
+			$r->template = $templateCollection->items[$selector];
+			break;
+		}
+	}
+
+	if ($r->template) {
+		return true;
+	} else {
+		trigger_error('No theme was found matching the selectors specified: ' . join(', ', $args), E_USER_ERROR);
+		return false;
+	}
+};
+
 $r->render_page = 
 function() use ($r) {
 	if (isset($r->page) && $r->page instanceof Page) {
 
 		$r->hooks->before_render_page();
 
-		$template = $r->page->template ?? $r->site->template ?? $r->theme->default_template ?? 'page';
-		$path = Path::combine($r->theme->dir, $template . '.php');
-		if (file_exists($path)) {
-			include_once($path);
+		$r->select_template($r->page->template, $r->site->template, $r->theme->default_template, 'page');
+
+		if (file_exists($r->template->file)) {
+			include_once($r->template->file);
 		} else {
-			trigger_error("render_page: File '{$path}' was not found.", E_USER_ERROR);
+			trigger_error("render_page: File '{$r->template->file}' was not found.", E_USER_ERROR);
 		}
 		
 		$r->hooks->after_render_page();

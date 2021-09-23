@@ -6,5 +6,6 @@ class Theme extends Readonly {
 	protected string $version;
 	protected string $path;
 	protected string $default_template;
+	protected object $templates;
 }
 ?>
