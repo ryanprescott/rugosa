@@ -372,7 +372,7 @@ function() use ($r) {
 	if ($r->template) {
 		return true;
 	} else {
-		trigger_error('No theme was found matching the selectors specified: ' . join(', ', $args), E_USER_ERROR);
+		trigger_error('No template was found matching the selectors specified: ' . join(', ', $args), E_USER_ERROR);
 		return false;
 	}
 };
