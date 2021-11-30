@@ -1,7 +1,7 @@
 <?php namespace Rugosa;
 
 function panic($errno = null, $errstr = null, $errfile = null, $errline = null) {
-if (ob_get_level()) { ob_end_clean(); }
+while (ob_get_level()) { ob_end_clean(); }
 http_response_code('500');
 ?>
 <html>
@@ -37,7 +37,7 @@ register_shutdown_function(function() {
 // ini_set('display_errors', 0);
 
 spl_autoload_register(function($className) {
-	$rewritten_path = str_replace('\\', '/', __DIR__ . '/../'. $className) . '.php';
+	$rewritten_path = __DIR__ . '/../'. str_replace('\\', '/', $className) . '.php';
 	@require_once($rewritten_path);
 });
 
@@ -312,9 +312,14 @@ function() use ($r) {
 	}
 };
 
+$r->get_selector_from_url = 
+function() use ($r) {
+	return trim(strtok($_SERVER['REQUEST_URI'], '?'), '/') ?: $r->site->default_page ?: 'home';
+};
+
 $r->select_page_from_url =
 function($default = null) use ($r) {
-	$r->selector = trim(strtok($_SERVER['REQUEST_URI'], '?'), '/') ?: $r->site->default_page ?: 'home';
+	$r->selector = $r->get_selector_from_url();
 	return $r->select_page($r->selector, $default);
 };
 
@@ -378,12 +383,16 @@ function() use ($r) {
 
 		$r->hooks->before_render_page();
 
-		$r->select_template($r->page->template, $r->site->template, $r->theme->default_template, 'page');
-
-		if (file_exists($r->template->file)) {
+		if (!$r->template instanceof Template) {
+			$r->select_template($r->page->template, $r->site->template, $r->theme->default_template, 'page');
+		}
+		
+		if (is_callable($r->template?->content)) {
+			($r->template->content)();
+		} else if (file_exists($r->template?->file)) {
 			include_once($r->template->file);
 		} else {
-			trigger_error("render_page: File '{$r->template->file}' was not found.", E_USER_ERROR);
+			trigger_error('There was no content in the template to render.', E_USER_ERROR);
 		}
 		
 		$r->hooks->after_render_page();

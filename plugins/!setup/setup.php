@@ -2,6 +2,56 @@
 
 @require_once($_SERVER['DOCUMENT_ROOT']. '/Rugosa/Core.php');
 
+$r->setup_template = function() use ($r) {
+?>
+<!DOCTYPE html>
+<html>
+<?php $r->hooks->head_tag->add(function() use ($r) { ?>
+<script>
+if (window.location.hash !== "") window.location.hash = ""
+</script>
+<meta name="viewport" content="user-scalable=0, width=device-width, initial-scale=1.0, minimal-ui" />
+<style>
+html{
+    background-color: #222;
+}
+#main {
+    margin: 5rem auto;
+    max-width: 1024px;
+    background-color: #fff;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+.logo {
+    display: inline-block;
+}
+div#content {
+    padding: 0 1rem;
+}
+div#header {
+    width: 100%;
+    padding: 0px 1rem;
+    box-sizing: border-box;
+    background-color: #eee;
+}
+</style>
+<?php $r->title_tag(); }); 
+$r->head_tag();
+?>
+<body>
+    <div id="main">
+        <div id="header">
+            <div class="logo"><?=$r->logo()?></div>
+        </div>
+        <div id="content">
+            <?php $r->render_content(); ?>
+        </div>
+    </div>
+</body>
+</html>
+<?php
+};
+
 $r->setup_content = function() use ($r) {
 ?>
 <form method='post' action=''>
@@ -35,22 +85,21 @@ $r->site = new Site([
     "title"=>"Rugosa Setup"
 ]);
 
-$r->pages = new Collection();
-$r->pages->add(new Page([
+$r->page = new Page([
     "name"=>"setup",
     "content"=>$r->setup_content
-]));
+]);
 
-$r->themes = new Collection();
-$r->themes->add(new Theme([
+$r->theme = new Theme([
     "name"=>"setup",
-    "dir"=>__DIR__
-]));
+]);
+
+$r->template = new Template([
+    "name"=>"setup",
+    "content"=>$r->setup_template
+]);
 
 $r->use_default_styles();
-$r->select_theme("setup");
-$r->select_page("setup");
-
 $r->logo = "<h1><span class='rugosa'></span> Rugosa</h1>";
 
 $r->render_page();
