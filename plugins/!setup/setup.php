@@ -1,6 +1,6 @@
 <?php namespace Rugosa;
 
-@require_once($_SERVER['DOCUMENT_ROOT']. '/Rugosa/Core.php');
+@require_once(__DIR__.'/../../Rugosa/Core.php');
 
 $r->setup_template = function() use ($r) {
 ?>
