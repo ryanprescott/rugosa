@@ -331,6 +331,7 @@ function() use ($r) {
 	}
 
 	if ($r->site) {
+		include_once($r->site->file);
 		return true;
 	} else {
 		trigger_error('No site was found matching the selectors specified: ' . join(', ', $args), E_USER_ERROR);
@@ -515,7 +516,7 @@ function() use ($r) {
 
 $r->logo =
 function() use ($r) {
-?><h3><?=$r->site->title?></h3><?php
+?><?=$r->site->title?><?php
 };
 
 $r->title_tag = 

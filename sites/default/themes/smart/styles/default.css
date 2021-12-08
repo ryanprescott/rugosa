@@ -1,0 +1,46 @@
+html {
+	background-color: #66667d;
+	margin: 0 0;
+	padding: 0;
+}
+
+body {
+	background-color: #f5f5fa;
+	margin: 2em auto;
+	padding: 1em;
+	box-sizing: border-box;
+	border-radius: 1em;
+	max-width: 1000px;
+}
+
+.logo {
+	font-size: 24px;
+	font-weight: bolder;
+}
+
+#nav ul {
+	display: flex;
+	list-style-type: none;
+	padding: 0.75em 0;
+	border-top: #ccd 1px solid;
+	border-bottom: #ccd 1px solid;
+	margin: 0.5em 0;
+}
+
+#nav ul a {
+	color: inherit;
+	text-decoration: none;
+	text-transform: uppercase;
+}
+
+@media screen and (max-width: 1000px) {
+	body {
+		border-radius: 0;
+		margin: 0;
+		top: 0;
+	}
+
+	.nav {
+		margin: 0;
+	}
+}
