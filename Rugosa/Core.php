@@ -106,32 +106,53 @@ function(string $hook, $obj = null) use ($r) {
 	return false;
 };
 
-$r->load_site = 
-function() use ($r) {
-	if (isset($r->site) && $r->site instanceof Site) {
-		trigger_error("load_site: A site has already been loaded.");
-	} else {
-		if (is_dir("site")) {
-			if (file_exists("site/site.php")) {
-				$block = Metadata::from_php_file("site/site.php");
-				if (is_array($block)) {
-					$r->hooks->before_load_site();
-					$site = new Site($block);
-					$r->site = $site;
-					$r->hooks->after_load_site();
+$r->load_site =
+function($path) use ($r) {
+	if (!isset($r->sites)) {
+		$r->sites = new Collection;
+	}
+	if (is_dir($path)) {
+		$def = Path::combine($path, "site.php");
+		if (file_exists($def)) {
+			$block = Metadata::from_php_file($def);
+			if (is_array($block)) {
+
+				$site = new Site($block);
+				
+				if ($r->sites->add($site)) {
 					return true;
 				} else {
-					trigger_error("load_site: Site could not be loaded. File 'site.php' did not contain a valid site declaration.", E_USER_ERROR);
+					trigger_error("load_site: Site '{$site->name}' at '{$path}' could not be loaded either because it has no name, or it is a duplicate of an already loaded theme.");
 				}
 			} else {
-				trigger_error("load_site: site.php does not exist.", E_USER_ERROR);
+				trigger_error("load_site: Site could not be loaded. File '{$def}' did not contain a valid site declaration.");
 			}
 		} else {
-			trigger_error("load_site: The site directory does not exist.", E_USER_ERROR);
+			trigger_error("load_site: Site could not be loaded. File '{$def}' does not exist.");
 		}
+	} else {
+		trigger_error("load_site: Site could not be loaded. Supplied path '$path' does not exist or was not a directory.");
 	}
 	return false;
 };
+
+$r->load_sites =
+function() use ($r) {
+	$sitesDir = Path::combine(getcwd(), 'sites');
+	if(is_dir($sitesDir)) {
+		$siteDirs = array_diff(scandir($sitesDir), [".", ".."]);
+		foreach($siteDirs as $siteDir) {
+			if (substr($siteDir, 0, 1) !== "!") {
+				$path = Path::combine($sitesDir, $siteDir);
+				$r->load_site($path);
+			}
+		}
+	} else {
+		trigger_error('load_sites: Sites directory does not exist or is not a directory.');
+		return false;
+	}
+};
+
 
 $r->import_templates =
 function($path) use ($r) {
@@ -186,11 +207,12 @@ function($path) use ($r) {
 
 $r->load_themes =
 function() use ($r) {
-	if(is_dir("themes")) {
-		$themeDirs = array_diff(scandir("themes"), [".", ".."]);
+	$themesDir = Path::combine($r->site->dir, 'themes');
+	if(is_dir($themesDir)) {
+		$themeDirs = array_diff(scandir($themesDir), [".", ".."]);
 		foreach($themeDirs as $themeDir) {
 			if (substr($themeDir, 0, 1) !== "!") {
-				$path = Path::combine("themes", $themeDir);
+				$path = Path::combine($themesDir, $themeDir);
 				$r->load_theme($path);
 			}
 		}
@@ -233,11 +255,12 @@ function($path) use ($r) {
 
 $r->load_plugins =
 function() use ($r) {
-	if(is_dir("plugins")) {
-		$pluginDirs = array_diff(scandir("plugins"), [".", ".."]);
+	$pluginsDir = Path::combine($r->site->dir, 'plugins');
+	if(is_dir($pluginsDir)) {
+		$pluginDirs = array_diff(scandir($pluginsDir), [".", ".."]);
 		foreach($pluginDirs as $pluginDir) {
 			if (substr($pluginDir, 0, 1) !== "!") {
-				$path = Path::combine("plugins", $pluginDir);
+				$path = Path::combine($pluginsDir, $pluginDir);
 				$r->load_plugin($path);
 			}
 		}
@@ -269,12 +292,15 @@ function($path) use ($r) {
 $r->load_pages =
 function() use ($r) {
 	$r->hook("before_load_pages");
-	if(is_dir('pages')) {
-		$pageFiles = array_diff(scandir('pages'), [".", ".."]);
+
+	$pagesDir = Path::combine($r->site->dir, 'pages');
+
+	if($pagesDir) {
+		$pageFiles = array_diff(scandir($pagesDir), [".", ".."]);
 		if (count($pageFiles) > 0) {
 			foreach($pageFiles as $pageFile) {
 				if (substr($pageFile, 0, 1) !== '!') {
-					$path = Path::combine('pages', $pageFile);
+					$path = Path::combine($pagesDir, $pageFile);
 					$r->load_page($path);
 				}
 			}
@@ -283,6 +309,33 @@ function() use ($r) {
 		}
 	}
 	trigger_error('load_pages: Your site has no pages. Please create some pages before attempting to initialize Rugosa.', E_USER_ERROR);
+};
+
+$r->select_site =
+function() use ($r) {
+	$args = func_get_args();
+	if ($args[0] instanceof Collection) {
+		$siteCollection = array_shift($args);
+	} elseif ($r?->sites instanceof Collection) {
+		$siteCollection = $r->sites;
+	} else {
+		trigger_error('The default site collection was not available and no collection was specified.', E_USER_ERROR);
+		return false;
+	}
+
+	foreach($args as $selector) {
+		if (array_key_exists($selector, $siteCollection->items)) {
+			$r->site = $siteCollection->items[$selector];
+			break;
+		}
+	}
+
+	if ($r->site) {
+		return true;
+	} else {
+		trigger_error('No site was found matching the selectors specified: ' . join(', ', $args), E_USER_ERROR);
+		return false;
+	}
 };
 
 $r->select_page =
@@ -312,15 +365,26 @@ function() use ($r) {
 	}
 };
 
-$r->get_selector_from_url = 
+$r->get_page_selector_from_url = 
 function() use ($r) {
 	return trim(strtok($_SERVER['REQUEST_URI'], '?'), '/') ?: $r->site->default_page ?: 'home';
 };
 
 $r->select_page_from_url =
 function($default = null) use ($r) {
+	$r->page_selector = $r->get_page_selector_from_url();
+	return $r->select_page($r->page_selector, $default);
+};
+
+$r->get_site_selector_from_host = 
+function() use ($r) {
+	return $_SERVER['HTTP_HOST'] ?: 'default';
+};
+
+$r->select_site_from_host =
+function($default = null) use ($r) {
 	$r->selector = $r->get_selector_from_url();
-	return $r->select_page($r->selector, $default);
+	return $r->select_site($r->selector, $default);
 };
 
 $r->select_theme =
@@ -425,17 +489,25 @@ $r->init =
 function() use ($r) {
 	session_start();
 	ob_start();
+
+	$r->load_sites();
+	$r->select_site_from_host('default');
+
 	$r->load_plugins();
 	$r->hooks->preload();
-	$r->load_site();
-	$r->load_pages();
+
 	$r->load_themes();
+	$r->load_pages();
+
 	$r->select_page_from_url('404');
 	$r->select_theme($r->page->theme, $r->site->theme, 'default');
+
 	$r->use_default_styles();
 	$r->render_page();
+
 	$r->hooks->postload();
 	ob_end_flush();
+
 	exit();
 };
 

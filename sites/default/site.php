@@ -1,6 +1,6 @@
 <?php
 /*--
-name=default_site;
+name=default;
 title=Rugosa Web Framework;
 --*/
 ?>
