@@ -2,7 +2,7 @@
 /*--
 name=default;
 title=Rugosa Web Framework;
-theme=smart
+theme=default
 --*/
 
 /* You can put site specific code here */

@@ -81,18 +81,29 @@ label[for="navtoggle"] {
 }
 
 #header {
-	padding: 0px 1rem;
+	padding: 1rem 1rem;
 	box-sizing: border-box;
 	vertical-align: middle;
+	box-shadow: 0px 1px 5px #aaa;
+	width: 100%;
+	position: sticky;
+	top: 0;
+	background-color: #eee;
 }
 
 .navbutton {
 	padding-right: 1rem;
+	font-size: 18px;
 	display: inline-block;
 }
 
-.logo {
+.logo, .branding {
 	display: inline-block;
+}
+
+.branding {
+	font-weight: 700;
+	font-size: 18px;
 }
 
 div#content {
@@ -103,15 +114,7 @@ div#nav ul#navitems {
 	padding: 0;
 }
 
-div#footer {
+#footer {
 	padding: .5rem 1rem;
 	border-top: 1px #aaa solid;
-}
-
-div#header {
-	box-shadow: 0px 1px 5px #aaa;
-	width: 100%;
-	position: sticky;
-	top: 0;
-	background-color: #eee;
 }
