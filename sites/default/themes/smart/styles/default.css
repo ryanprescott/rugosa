@@ -1,11 +1,12 @@
 html {
-	background-color: #66667d;
+	background-color: #f5f5fa;
 	margin: 0 0;
 	padding: 0;
 }
 
 body {
-	background-color: #f5f5fa;
+	background-color: #fff;
+	box-shadow: 1px 1px 4px -1px #0000007f;
 	margin: 2em auto;
 	padding: 1em;
 	box-sizing: border-box;
