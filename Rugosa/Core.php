@@ -34,8 +34,6 @@ register_shutdown_function(function() {
 	}
 });
 
-// ini_set('display_errors', 0);
-
 spl_autoload_register(function($className) {
 	$rewritten_path = __DIR__ . '/../'. str_replace('\\', '/', $className) . '.php';
 	@require_once($rewritten_path);
@@ -62,14 +60,6 @@ define('__DOCROOT__', $_SERVER['DOCUMENT_ROOT']);
 define('__RELROOT__', Path::diff(getcwd(), __DOCROOT__));
 define('__WEBRELROOT__', Path::combine('//',$_SERVER['HTTP_HOST'],__RELROOT__));
 define('__WEBROOT__', Path::combine('//',$_SERVER['HTTP_HOST']));
-
-$r->backtrace = function() use ($r) {
-	$backtrace = debug_backtrace();
-	$str = '';
-	foreach($item as $backtrace) {
-		$str .= implode($item, ',') . '\n';
-	}
-};
 
 /*** Hooks ***/
 $r->available_hooks = [
