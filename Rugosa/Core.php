@@ -18,7 +18,7 @@ spl_autoload_register(function($className) {
 	if ($className === 'Rugosa\Core') {
 		return;
 	}
-	
+
 	$rewritten_path = __DIR__ . '/../'. str_replace('\\', '/', $className) . '.php';
 	@require_once($rewritten_path);
 });
@@ -59,7 +59,6 @@ foreach (available_hooks as $hook) {
 }
 
 function hook(string $hook, mixed $obj = null) {
-	error_log($hook);
 	if (hooks->get($hook)) {
 		if ($obj === null) {
 			return hooks->{$hook}->execute();
@@ -75,6 +74,8 @@ const themes = new Collection;
 const pages = new Collection;
 const templates = new Collection;
 const plugins = new Collection;
+const meta = new Meta();
+const custom = new \stdClass();
 
 function load_site(string $path) {
 	if (!is_dir($path)) {
@@ -94,6 +95,11 @@ function load_site(string $path) {
 	}
 
 	$site = new Site($block);
+
+	$meta = meta;
+	$meta->site = $site;
+	include_once($def);
+	$meta->site = null;
 
 	if (!sites->add($site)) {
 		trigger_error("load_site: Site '". $site->name . "' at '{$path}' could not be loaded either because it has no name, or it is a duplicate of an already loaded site.");
@@ -152,8 +158,14 @@ function load_theme(string $path) {
 		trigger_error("load_theme: Theme could not be loaded. File '{$def}' did not contain a valid theme declaration.");
 	}
 
+	
 	$block['templates'] = import_templates($path);
 	$theme = new Theme($block);
+
+	$meta = meta;
+	$meta->theme = $theme;
+	include_once($def);
+	$meta->theme = null;
 
 	if (!themes->add($theme)) {
 		trigger_error("load_theme: Theme '". $theme->name . "' at '{$path}' could not be loaded either because it has no name, or it is a duplicate of an already loaded theme.");
@@ -180,42 +192,40 @@ function load_themes() {
 };
 
 function load_plugin(string $path) {
-	global $plugin, $plugins;
-
-	if (!isset($plugins)) {
-		$plugins = new Collection;
+	if (!is_dir($path)) {
+		trigger_error("load_plugin: plugin could not be loaded. Supplied path '$path' does not exist or was not a directory.");
 	}
 
-	if (is_dir($path)) {
-		$def = Path::combine($path, "plugin.php");
-		if (file_exists($def)) {
-			$block = Metadata::from_php_file($def);
-			if (is_array($block)) {
-				$newPlugin = new Plugin($block);
-				if ($plugins->add($newPlugin)) {
-					$plugin = $newPlugin;
-					include_once($def);
-					unset($plugin);
-					return true;
-				} else {
-					trigger_error("load_plugin: Plugin '{$plugin->name}' at '{$path}' could not be loaded either because it has no name, or it is a duplicate of an already loaded plugin.");
-				}
-			} else {
-				trigger_error("load_plugin: Plugin could not be loaded. File '{$def}' did not contain a valid plugin declaration.");
-			}
-		} else {
-			trigger_error("load_plugin: Plugin could not be loaded. File '{$def}' does not exist.");
-		}
-	} else {
-		trigger_error("load_plugin: Plugin could not be loaded. Supplied path '$path' does not exist or was not a directory.");
+	$def = Path::combine($path, "plugin.php");
+
+	if (!file_exists($def)) {
+		trigger_error("load_plugin: Plugin could not be loaded. File '{$def}' does not exist.");
 	}
-	return false;
+
+	$block = Metadata::from_php_file($def);
+
+	if (!is_array($block)) {
+		trigger_error("load_plugin: Plugin could not be loaded. File '{$def}' did not contain a valid plugin declaration.");
+	}
+
+	
+	$block['templates'] = import_templates($path);
+	$plugin = new Plugin($block);
+
+	$meta = meta;
+	$meta->plugin = $plugin;
+	include_once($def);
+	$meta->plugin = null;
+
+	if (!plugins->add($plugin)) {
+		trigger_error("load_plugin: Plugin '". $plugin->name . "' at '{$path}' could not be loaded either because it has no name, or it is a duplicate of an already loaded plugin.");
+	}
+
+	return true;
 };
 
 function load_plugins() {
-	global $site;
-
-	$pluginsDir = Path::combine($site->dir, 'plugins');
+	$pluginsDir = Path::combine(site->dir, 'plugins');
 	if(is_dir($pluginsDir)) {
 		$pluginDirs = array_diff(scandir($pluginsDir), [".", ".."]);
 		foreach($pluginDirs as $pluginDir) {
@@ -397,7 +407,6 @@ function select_template() {
 
 function render_page() {
 	if (defined('Rugosa\page') && page instanceof Page) {
-
 		hooks->before_render_page->execute();
 
 		if (!defined('Rugosa\template')) {

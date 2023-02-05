@@ -2,8 +2,12 @@
 
 class Collection {
 
-	protected array $items = [];
+	private array $items = [];
 
+	public function items() {
+		return $this->items;
+	}
+	
 	public function add($item) {
 		if (!$item->name) {
 			trigger_error("Collection->add: Item name cannot be empty.");
