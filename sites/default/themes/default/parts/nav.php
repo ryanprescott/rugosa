@@ -1,5 +1,5 @@
 <?php
-if ($r->nav) { 
+if (isset($nav)) { 
 ?>
 
 <input type="checkbox" id="navtoggle">
@@ -7,7 +7,7 @@ if ($r->nav) {
 <ul id="navitems">
 <label for="navtoggle"><li>&larr;</li></label>
 <?php 
-$r->nav->build($r->pages); 
+$nav->build($r->pages); 
 ?>
 </ul>
 </div>

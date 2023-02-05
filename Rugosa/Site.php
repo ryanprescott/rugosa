@@ -1,9 +1,9 @@
 <?php namespace Rugosa;
-class Site extends Readonly {
-	protected string $name;
-	protected string $title;
-	protected string $theme;
-	protected string $default_page;
-	protected string $default_template;
+class Site extends FromFile {
+	public string $name;
+	public string $title;
+	public string $theme;
+	public string $default_page;
+	public string $default_template;
 }
 ?>

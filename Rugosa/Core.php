@@ -43,18 +43,7 @@ if (PHP_VERSION[0]<8) {
 	trigger_error("Rugosa is not compatible with PHP versions before 8.0. Please install the latest version of PHP.", E_USER_ERROR);
 }
 
-class Core {
-	public function __call($name, $arguments) {
-		if (is_callable($this->{$name})) {
-			return ($this->{$name})(...$arguments);
-		} else {
-			echo $this->{$name};
-		}
-	}
-};
-
-$r = new Core;
-$r->version = new Version(0, 21, 9, 3);
+define('RUGOSA_VERSION', new Version(1, 23, 2, 0));
 
 define('__DOCROOT__', $_SERVER['DOCUMENT_ROOT']);
 define('__RELROOT__', Path::diff(getcwd(), __DOCROOT__));
@@ -62,7 +51,7 @@ define('__WEBRELROOT__', Path::combine('//',$_SERVER['HTTP_HOST'],__RELROOT__));
 define('__WEBROOT__', Path::combine('//',$_SERVER['HTTP_HOST']));
 
 /*** Hooks ***/
-$r->available_hooks = [
+$available_hooks = [
 	'before_load_site',
 	'after_load_site',
 	'before_load_pages',
@@ -79,27 +68,28 @@ $r->available_hooks = [
 	'head_tag',
 ];
 
-$r->hooks = new Core();
-foreach ($r->available_hooks as $hook) {
-	$r->hooks->{$hook} = new Hook;
+$hooks = new Collection();
+
+foreach ($available_hooks as $hook) {
+	$hooks->set($hook, new Hook());
 }
 
-$r->hook =
-function(string $hook, $obj = null) use ($r) {
-	if ($r->hooks->{$hook}) {
+function hook(string $hook, mixed $obj = null) {
+	global $hooks;
+	if ($hooks->get($hook)) {
 		if ($obj === null) {
-			return $r->hooks->{$hook}();
+			return $hooks->{$hook}->execute();
 		} else {
-			return $r->hooks->{$hook}->add($obj);
+			return $hooks->{$hook}->add($obj);
 		}
 	}
 	return false;
 };
 
-$r->load_site =
-function($path) use ($r) {
-	if (!isset($r->sites)) {
-		$r->sites = new Collection;
+function load_site(string $path) {
+	global $sites;
+	if (!isset($sites)) {
+		$sites = new Collection;
 	}
 	if (is_dir($path)) {
 		$def = Path::combine($path, "site.php");
@@ -109,7 +99,7 @@ function($path) use ($r) {
 
 				$site = new Site($block);
 				
-				if ($r->sites->add($site)) {
+				if ($sites->add($site)) {
 					return true;
 				} else {
 					trigger_error("load_site: Site '{$site->name}' at '{$path}' could not be loaded either because it has no name, or it is a duplicate of an already loaded theme.");
@@ -126,15 +116,14 @@ function($path) use ($r) {
 	return false;
 };
 
-$r->load_sites =
-function() use ($r) {
+function load_sites() {
 	$sitesDir = Path::combine(getcwd(), 'sites');
 	if(is_dir($sitesDir)) {
 		$siteDirs = array_diff(scandir($sitesDir), [".", ".."]);
 		foreach($siteDirs as $siteDir) {
 			if (substr($siteDir, 0, 1) !== "!") {
 				$path = Path::combine($sitesDir, $siteDir);
-				$r->load_site($path);
+				load_site($path);
 			}
 		}
 	} else {
@@ -143,9 +132,7 @@ function() use ($r) {
 	}
 };
 
-
-$r->import_templates =
-function($path) use ($r) {
+function import_templates(string $path) {
 	$templateCollection = new Collection;
 	$templatesPath = Path::combine($path, "templates");
 	if (is_dir($path)) {
@@ -164,21 +151,23 @@ function($path) use ($r) {
 	return $templateCollection;
 };
 
-$r->load_theme =
-function($path) use ($r) {
-	if (!isset($r->themes)) {
-		$r->themes = new Collection;
+function load_theme(string $path) {
+	global $themes;
+
+	if (!isset($themes)) {
+		$themes = new Collection;
 	}
+
 	if (is_dir($path)) {
 		$def = Path::combine($path, "theme.php");
 		if (file_exists($def)) {
 			$block = Metadata::from_php_file($def);
 			if (is_array($block)) {
 
-				$block["templates"] = $r->import_templates($path);
+				$block["templates"] = import_templates($path);
 				$theme = new Theme($block);
 				
-				if ($r->themes->add($theme)) {
+				if ($themes->add($theme)) {
 					return true;
 				} else {
 					trigger_error("load_theme: Theme '{$theme->name}' at '{$path}' could not be loaded either because it has no name, or it is a duplicate of an already loaded theme.");
@@ -195,15 +184,15 @@ function($path) use ($r) {
 	return false;
 };
 
-$r->load_themes =
-function() use ($r) {
-	$themesDir = Path::combine($r->site->dir, 'themes');
+function load_themes() {
+	global $site;
+	$themesDir = Path::combine($site->dir, 'themes');
 	if(is_dir($themesDir)) {
 		$themeDirs = array_diff(scandir($themesDir), [".", ".."]);
 		foreach($themeDirs as $themeDir) {
 			if (substr($themeDir, 0, 1) !== "!") {
 				$path = Path::combine($themesDir, $themeDir);
-				$r->load_theme($path);
+				load_theme($path);
 			}
 		}
 	} else {
@@ -212,24 +201,26 @@ function() use ($r) {
 	}
 };
 
-$r->load_plugin =
-function($path) use ($r) {
-	if (!isset($r->plugins)) {
-		$r->plugins = new Collection;
+function load_plugin(string $path) {
+	global $plugin, $plugins;
+
+	if (!isset($plugins)) {
+		$plugins = new Collection;
 	}
+
 	if (is_dir($path)) {
 		$def = Path::combine($path, "plugin.php");
 		if (file_exists($def)) {
 			$block = Metadata::from_php_file($def);
 			if (is_array($block)) {
-				$plugin = new Plugin($block);
-				if ($r->plugins->add($plugin)) {
-					$r->plugin = $plugin;
+				$newPlugin = new Plugin($block);
+				if ($plugins->add($newPlugin)) {
+					$plugin = $newPlugin;
 					include_once($def);
-					unset($r->plugin);
+					unset($plugin);
 					return true;
 				} else {
-					trigger_error("load_plugin: Plugin '{$r->plugin->name}' at '{$path}' could not be loaded either because it has no name, or it is a duplicate of an already loaded plugin.");
+					trigger_error("load_plugin: Plugin '{$plugin->name}' at '{$path}' could not be loaded either because it has no name, or it is a duplicate of an already loaded plugin.");
 				}
 			} else {
 				trigger_error("load_plugin: Plugin could not be loaded. File '{$def}' did not contain a valid plugin declaration.");
@@ -243,15 +234,16 @@ function($path) use ($r) {
 	return false;
 };
 
-$r->load_plugins =
-function() use ($r) {
-	$pluginsDir = Path::combine($r->site->dir, 'plugins');
+function load_plugins() {
+	global $site;
+
+	$pluginsDir = Path::combine($site->dir, 'plugins');
 	if(is_dir($pluginsDir)) {
 		$pluginDirs = array_diff(scandir($pluginsDir), [".", ".."]);
 		foreach($pluginDirs as $pluginDir) {
 			if (substr($pluginDir, 0, 1) !== "!") {
 				$path = Path::combine($pluginsDir, $pluginDir);
-				$r->load_plugin($path);
+				load_plugin($path);
 			}
 		}
 	} else {
@@ -260,16 +252,18 @@ function() use ($r) {
 	}
 };
 
-$r->load_page =
-function($path) use ($r) {
-	if (!isset($r->pages)) {
-		$r->pages = new Collection;
+function load_page(string $path) {
+	global $pages;
+
+	if (!isset($pages)) {
+		$pages = new Collection;
 	}
+
 	if (file_exists($path)) {
 		$block = Metadata::from_php_file($path);
 		if (is_array($block)) {
 			$page = new Page($block);
-			return $r->pages->add($page);
+			return $pages->add($page);
 		} else {
 			trigger_error("load_page: File '{$path}' did not contain a valid page declaration.");
 		}
@@ -279,11 +273,12 @@ function($path) use ($r) {
 	return false;
 };
 
-$r->load_pages =
-function() use ($r) {
-	$r->hook("before_load_pages");
+function load_pages() {
+	global $site;
 
-	$pagesDir = Path::combine($r->site->dir, 'pages');
+	hook("before_load_pages");
+
+	$pagesDir = Path::combine($site->dir, 'pages');
 
 	if($pagesDir) {
 		$pageFiles = array_diff(scandir($pagesDir), [".", ".."]);
@@ -291,37 +286,38 @@ function() use ($r) {
 			foreach($pageFiles as $pageFile) {
 				if (substr($pageFile, 0, 1) !== '!') {
 					$path = Path::combine($pagesDir, $pageFile);
-					$r->load_page($path);
+					load_page($path);
 				}
 			}
-			$r->hook("after_load_pages");
+			hook("after_load_pages");
 			return true;
 		}
 	}
 	trigger_error('load_pages: Your site has no pages. Please create some pages before attempting to initialize Rugosa.', E_USER_ERROR);
 };
 
-$r->select_site =
-function() use ($r) {
+function select_site() {
+	global $sites, $site;
+
 	$args = func_get_args();
 	if ($args[0] instanceof Collection) {
 		$siteCollection = array_shift($args);
-	} elseif ($r?->sites instanceof Collection) {
-		$siteCollection = $r->sites;
+	} elseif ($sites instanceof Collection) {
+		$siteCollection = $sites;
 	} else {
 		trigger_error('The default site collection was not available and no collection was specified.', E_USER_ERROR);
 		return false;
 	}
 
 	foreach($args as $selector) {
-		if (array_key_exists($selector, $siteCollection->items)) {
-			$r->site = $siteCollection->items[$selector];
+		if ($siteCollection->has($selector)) {
+			$site = $siteCollection->get($selector);
 			break;
 		}
 	}
 
-	if ($r->site) {
-		include_once($r->site->file);
+	if ($site) {
+		include_once($site->file);
 		return true;
 	} else {
 		trigger_error('No site was found matching the selectors specified: ' . join(', ', $args), E_USER_ERROR);
@@ -329,26 +325,27 @@ function() use ($r) {
 	}
 };
 
-$r->select_page =
-function() use ($r) {
+function select_page() {
+	global $pages, $page;
+
 	$args = func_get_args();
 	if ($args[0] instanceof Collection) {
 		$pageCollection = array_shift($args);
-	} elseif ($r?->pages instanceof Collection) {
-		$pageCollection = $r->pages;
+	} elseif ($pages instanceof Collection) {
+		$pageCollection = $pages;
 	} else {
 		trigger_error('The default page collection was not available and no collection was specified.', E_USER_ERROR);
 		return false;
 	}
 
 	foreach($args as $selector) {
-		if (array_key_exists($selector, $pageCollection->items)) {
-			$r->page = $pageCollection->items[$selector];
+		if ($pageCollection->has($selector)) {
+			$page = $pageCollection->get($selector);
 			break;
 		}
 	}
 
-	if ($r->page) {
+	if ($page) {
 		return true;
 	} else {
 		trigger_error('No page was found matching the selectors specified: ' . join(', ', $args), E_USER_ERROR);
@@ -356,48 +353,48 @@ function() use ($r) {
 	}
 };
 
-$r->get_page_selector_from_url = 
-function() use ($r) {
-	return trim(strtok($_SERVER['REQUEST_URI'], '?'), '/') ?: $r->site->default_page ?: 'home';
+function get_page_selector_from_url() {
+	global $site;
+	error_log(json_encode($site));
+	return trim(strtok($_SERVER['REQUEST_URI'], '?'), '/') ?: (isset($site->default_page) ? $site?->default_page : 'home');
 };
 
-$r->select_page_from_url =
-function($default = null) use ($r) {
-	$r->page_selector = $r->get_page_selector_from_url();
-	return $r->select_page($r->page_selector, $default);
+function select_page_from_url(mixed $default = null) {
+	global $page_selector;
+	$page_selector = get_page_selector_from_url();
+	return select_page($page_selector, $default);
 };
 
-$r->get_site_selector_from_host = 
-function() use ($r) {
+function get_site_selector_from_host() {
 	return $_SERVER['HTTP_HOST'] ?: 'default';
 };
 
-$r->select_site_from_host =
-function($default = null) use ($r) {
-	$r->selector = $r->get_selector_from_url();
-	return $r->select_site($r->selector, $default);
+function select_site_from_host(mixed $default = null) {
+	global $selector;
+	$selector = get_page_selector_from_url();
+	return select_site($selector, $default);
 };
 
-$r->select_theme =
-function() use ($r) {
+function select_theme() {
+	global $themes, $theme;
 	$args = func_get_args();
 	if ($args[0] instanceof Collection) {
 		$themeCollection = array_shift($args);
-	} elseif ($r?->themes instanceof Collection) {
-		$themeCollection = $r->themes;
+	} elseif ($themes instanceof Collection) {
+		$themeCollection = $themes;
 	} else {
 		trigger_error('The default theme collection was not available and no collection was specified.', E_USER_ERROR);
 		return false;
 	}
 
 	foreach($args as $selector) {
-		if (array_key_exists($selector, $themeCollection->items)) {
-			$r->theme = $themeCollection->items[$selector];
+		if ($themeCollection->has($selector)) {
+			$theme = $themeCollection->get($selector);
 			break;
 		}
 	}
 
-	if ($r->theme) {
+	if ($theme) {
 		return true;
 	} else {
 		trigger_error('No theme was found matching the selectors specified: ' . join(', ', $args), E_USER_ERROR);
@@ -405,26 +402,27 @@ function() use ($r) {
 	}
 };
 
-$r->select_template =
-function() use ($r) {
+function select_template() {
+	global $theme, $template;
+
 	$args = func_get_args();
 	if ($args[0] instanceof Collection) {
 		$templateCollection = array_shift($args);
-	} elseif ($r?->theme?->templates instanceof Collection) {
-		$templateCollection = $r->theme->templates;
+	} elseif ($theme->templates instanceof Collection) {
+		$templateCollection = $theme->templates;
 	} else {
 		trigger_error('The default template collection was not available and no collection was specified.', E_USER_ERROR);
 		return false;
 	}
 
 	foreach($args as $selector) {
-		if (array_key_exists($selector, $templateCollection->items)) {
-			$r->template = $templateCollection->items[$selector];
+		if ($templateCollection->has($selector)) {
+			$template = $templateCollection->get($selector);
 			break;
 		}
 	}
 
-	if ($r->template) {
+	if ($template) {
 		return true;
 	} else {
 		trigger_error('No template was found matching the selectors specified: ' . join(', ', $args), E_USER_ERROR);
@@ -432,77 +430,89 @@ function() use ($r) {
 	}
 };
 
-$r->render_page = 
-function() use ($r) {
-	if (isset($r->page) && $r->page instanceof Page) {
+function render_page() {
+	global $page, $hooks, $template, $site, $theme;
 
-		$r->hooks->before_render_page();
+	if (isset($page) && $page instanceof Page) {
 
-		if (!$r->template instanceof Template) {
-			$r->select_template($r->page->template, $r->site->template, $r->theme->default_template, 'page');
+		$hooks->before_render_page->execute();
+
+		if (!$template instanceof Template) {
+			select_template(isset($page->template) && $page->template, $site->template, isset($theme->default_template) && $theme->default_template, 'page');
 		}
 		
-		if (is_callable($r->template?->content)) {
-			($r->template->content)();
-		} else if (file_exists($r->template?->file)) {
-			include_once($r->template->file);
+		if (isset($template->content) && is_callable($template->content)) {
+			($template->content)();
+		} else if (file_exists($template->file)) {
+			include_once($template->file);
 		} else {
 			trigger_error('There was no content in the template to render.', E_USER_ERROR);
 		}
 		
-		$r->hooks->after_render_page();
+		$hooks->after_render_page->execute();
 	} else {
 		trigger_error('A page render was attempted before a page was selected. This can happen when a non-existent resource is requested and no 404 page is available.', E_USER_ERROR);
 	}
 };
 
-
-$r->render_content = 
-function() use ($r) {
-	if ($r->page) {
-		$r->hooks->before_render_content();
-		if (!isset($r->page->content)) {
-			include_once($r->page->file);
-		} elseif ($r->page->content instanceof \Closure) {
-			($r->page->content)();
-		} elseif (is_string($r->page->content)) {
-			echo $r->page->content;
+function render_content() {
+	global $page, $hooks;
+	if ($page) {
+		$hooks->before_render_content->execute();
+		if (!isset($page->content)) {
+			include_once($page->file);
+		} elseif ($page->content instanceof \Closure) {
+			($page->content)();
+		} elseif (is_string($page->content)) {
+			echo $page->content;
 		}
-		$r->hooks->after_render_content();
+		$hooks->after_render_content->execute();
 		return true;
 	} else {
 		return false;
 	}
 
 };
+function use_default_styles() {
+	hook('head_tag', "<link rel='stylesheet' type='text/css' href='" . __WEBROOT__ . "/Rugosa/assets/css/rugosa.css'>");
+}
 
-$r->init =
-function() use ($r) {
+function init() {
+	global $hooks, $page, $site;
+
 	session_start();
 	ob_start();
 
-	$r->load_sites();
-	$r->select_site_from_host('default');
+	load_sites();
+	select_site_from_host('default');
 
-	$r->load_plugins();
-	$r->hooks->preload();
+	load_plugins();
+	$hooks->preload->execute();
 
-	$r->load_themes();
-	$r->load_pages();
+	load_themes();
+	load_pages();
 
-	$r->select_page_from_url('404');
-	$r->select_theme($r->page->theme, $r->site->theme, 'default');
+	select_page_from_url('404');
+	select_theme(isset($page->theme) && $page->theme, $site->theme, 'default');
 
-	$r->use_default_styles();
-	$r->render_page();
+	use_default_styles();
+	render_page();
 
-	$r->hooks->postload();
+	$hooks->postload->execute();
 	ob_end_flush();
 
 	exit();
 };
 
-/* Stylistic functions */
+function head_tag() {
+	global $hooks;
+	echo "<head>";
+	$hooks->head_tag->execute();
+	echo "</head>";
+}
+/*
+
+Old Helpers
 
 $r->logo =
 function() use ($r) {
@@ -517,15 +527,6 @@ function() use ($r) {
 	}
 };
 
-$r->head_tag =
-function() use ($r) {
-	echo "<head>";
-	$r->hooks->head_tag();
-	echo "</head>";
-};
+*/
 
-$r->use_default_styles =
-function() use ($r) {
-	$r->hook('head_tag', "<link rel='stylesheet' type='text/css' href='" . __WEBROOT__ . "/Rugosa/assets/css/rugosa.css'>");
-}
 ?>

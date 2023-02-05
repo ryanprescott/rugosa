@@ -6,13 +6,13 @@ description=Default page
 ?>
 <!DOCTYPE html>
 <html>
-<?php include($r->template->dir . "/../parts/head.php"); ?>
+<?php include($template->dir . "/../parts/head.php"); ?>
 <body>
-<?php include($r->template->dir . "/../parts/header.php"); ?>
-<?php include($r->template->dir . "/../parts/nav.php"); ?>
+<?php include($template->dir . "/../parts/header.php"); ?>
+<?php include($template->dir . "/../parts/nav.php"); ?>
 <div id="content">
-	<?php $r->render_content(); ?>
+	<?php Rugosa\render_content(); ?>
 </div>
-<?php include($r->template->dir . "/../parts/footer.php"); ?>
+<?php include($template->dir . "/../parts/footer.php"); ?>
 </body>
 </html>

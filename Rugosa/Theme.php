@@ -1,11 +1,11 @@
 <?php namespace Rugosa;
-class Theme extends Readonly {
-	protected string $name;
-	protected string $friendly_name;
-	protected string $description;
-	protected string $version;
-	protected string $path;
-	protected string $default_template;
-	protected object $templates;
+class Theme extends FromFile {
+	public string $name;
+	public string $friendly_name;
+	public string $description;
+	public string $version;
+	public string $path;
+	public string $default_template;
+	public object $templates;
 }
 ?>

@@ -1,7 +1,7 @@
 <?php namespace Rugosa;
-class Template extends Readonly {
-	protected string $name;
-	protected string $description;
-	protected object $content;
+class Template extends FromFile {
+	public string $name;
+	public string $description;
+	public mixed $content;
 }
 ?>

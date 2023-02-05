@@ -7,8 +7,9 @@ theme=default
 
 /* You can put site specific code here */
 
-$r->logo = function () use ($r) {
-    return '<span class="rugosa"></span>&nbsp;' . $r->site->title;
+$logo = function () {
+    global $site;
+    return '<span class="rugosa"></span>&nbsp;' . $site->title;
 }
 
 ?>

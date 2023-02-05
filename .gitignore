@@ -2,3 +2,4 @@
 .vscode/*
 plugins/!~unused
 plugins/!~unused/*
+.php-version
