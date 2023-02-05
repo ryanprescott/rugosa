@@ -1,5 +1,5 @@
 <div id="header">
-<?php if (Rugosa\custom->nav): ?>
+<?php if (class_exists('RugosaNav\Nav')): ?>
 <div class="navbutton"><label for="navtoggle"><strong>&#9776;</strong></label></div>
 <?php endif; ?>
 <div class="logo">

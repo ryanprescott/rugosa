@@ -75,7 +75,6 @@ const pages = new Collection;
 const templates = new Collection;
 const plugins = new Collection;
 const meta = new Meta();
-const custom = new \stdClass();
 
 function load_site(string $path) {
 	if (!is_dir($path)) {
