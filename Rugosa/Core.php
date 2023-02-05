@@ -155,11 +155,6 @@ function load_theme(string $path) {
 	$block['templates'] = import_templates($path);
 	$theme = new Theme($block);
 
-	$meta = meta;
-	$meta->theme = $theme;
-	include_once($def);
-	$meta->theme = null;
-
 	if (!themes->add($theme)) {
 		trigger_error("load_theme: Theme '". $theme->name . "' at '{$path}' could not be loaded either because it has no name, or it is a duplicate of an already loaded theme.");
 	}
@@ -201,7 +196,6 @@ function load_plugin(string $path) {
 		trigger_error("load_plugin: Plugin could not be loaded. File '{$def}' did not contain a valid plugin declaration.");
 	}
 
-	
 	$block['templates'] = import_templates($path);
 	$plugin = new Plugin($block);
 
