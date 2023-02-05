@@ -8,8 +8,7 @@ theme=default
 /* You can put site specific code here */
 
 $logo = function () {
-    global $site;
-    return '<span class="rugosa"></span>&nbsp;' . $site->title;
+    return '<span class="rugosa"></span>&nbsp;' . Rugosa\site->title;
 }
 
 ?>

@@ -7,7 +7,7 @@ if (isset($nav)) {
 <ul id="navitems">
 <label for="navtoggle"><li>&larr;</li></label>
 <?php 
-$nav->build($r->pages); 
+$nav->build(Rugosa\pages); 
 ?>
 </ul>
 </div>
