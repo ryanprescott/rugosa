@@ -1,9 +1,10 @@
 <?php namespace Rugosa;
 
 class Hook {
+	public string $name;
 	private array $items = [];
 
-	public function add($item) {
+	public function add(string | \Closure $item) {
 		if (is_string($item) || $item instanceof \Closure) {
 			array_push($this->items, $item);
 			return true;
