@@ -53,6 +53,12 @@ const available_hooks = [
 ];
 
 const hooks = new Collection();
+const sites = new Collection;
+const themes = new Collection;
+const pages = new Collection;
+const templates = new Collection;
+const plugins = new Collection;
+const meta = new Meta();
 
 foreach (available_hooks as $hook) {
 	hooks->set($hook, new Hook());
@@ -68,13 +74,6 @@ function hook(string $hook, mixed $obj = null) {
 	}
 	return false;
 };
-
-const sites = new Collection;
-const themes = new Collection;
-const pages = new Collection;
-const templates = new Collection;
-const plugins = new Collection;
-const meta = new Meta();
 
 function load_site(string $path) {
 	if (!is_dir($path)) {
@@ -94,11 +93,6 @@ function load_site(string $path) {
 	}
 
 	$site = new Site($block);
-
-	$meta = meta;
-	$meta->site = $site;
-	include_once($def);
-	$meta->site = null;
 
 	if (!sites->add($site)) {
 		trigger_error("load_site: Site '". $site->name . "' at '{$path}' could not be loaded either because it has no name, or it is a duplicate of an already loaded site.");
@@ -477,6 +471,13 @@ function head_tag() {
 	hooks->head_tag->execute();
 	echo "</head>";
 }
+
+function title_tag() {
+	if (site->title || page->title) {
+		$titleString = (page->title ?? '') . ((page->title && site->title) ? ' - ' : '') . (site->title ?? '');
+		echo "<title>$titleString</title>";
+	}
+};
 
 /*
 

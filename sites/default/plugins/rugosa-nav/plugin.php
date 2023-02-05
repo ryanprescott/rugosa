@@ -10,9 +10,11 @@ class Nav {
 	public static function build() {
 		if (defined('\Rugosa\pages') && \Rugosa\pages instanceof \Rugosa\Collection) {
 			foreach (\Rugosa\pages->items() as $page) {
+				$active = \Rugosa\page->name === $page->name;
+				$classAttr = $active ? ' class="active"' : '';
 				if ($page->title && $page->name && !$page->hidden) {
 ?>
-<a href="<?=\Rugosa\Path::combine(__WEBROOT__, $page->name)?>"><li><?=$page->title?></li></a>
+<a href="<?=\Rugosa\Path::combine(__WEBROOT__, $page->name)?>"><li<?=$classAttr?>><?=$page->title?></li></a>
 <?php
 				}
 			}

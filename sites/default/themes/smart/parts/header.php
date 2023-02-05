@@ -1,3 +1,3 @@
 <div id="header">
-    <div class="logo"><?=$r->logo()?></div>
+    <div class="logo"><?=Rugosa\site->title?></div>
 </div>

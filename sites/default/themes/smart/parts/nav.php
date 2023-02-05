@@ -1,11 +1,11 @@
 <?php
-if ($r->nav) { 
+if (Rugosa\hooks->has('rugosa_nav')) { 
 ?>
 
 <div id="nav">
 <ul id="navitems">
-<?php 
-$r->nav->build($r->pages); 
+<?php
+    Rugosa\hook('rugosa_nav');
 ?>
 </ul>
 </div>
