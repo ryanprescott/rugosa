@@ -1,5 +1,5 @@
 <?php
-if (Rugosa\plugins->has('rugosa-nav')) { 
+if (Rugosa\hooks->has('rugosa_nav')) { 
 ?>
 
 <input type="checkbox" id="navtoggle">
@@ -7,7 +7,7 @@ if (Rugosa\plugins->has('rugosa-nav')) {
 <ul id="navitems">
 <label for="navtoggle"><li>&larr;</li></label>
 <?php
-    RugosaNav\Nav::build(Rugosa\pages);
+    Rugosa\hooks->rugosa_nav->execute();
 ?>
 </ul>
 </div>

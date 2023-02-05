@@ -20,4 +20,7 @@ class Nav {
 	}
 }
 
+\Rugosa\hooks->set('rugosa_nav', new \Rugosa\Hook());
+\Rugosa\hook('rugosa_nav', function () { Nav::build(); });
+
 ?>
