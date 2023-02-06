@@ -32,7 +32,7 @@ define('__RELROOT__', Path::diff(getcwd(), __DOCROOT__));
 define('__WEBRELROOT__', Path::combine('//',$_SERVER['HTTP_HOST'],__RELROOT__));
 define('__WEBROOT__', Path::combine('//',$_SERVER['HTTP_HOST']));
 
-const version = new Version(1, 23, 2, 0);
+const version = new Version(0, 23, 2, 0);
 
 /*** Hooks ***/
 const available_hooks = [
@@ -322,11 +322,10 @@ function select_page() {
 };
 
 function get_page_selector_from_url() {
-	return trim(strtok($_SERVER['REQUEST_URI'], '?'), '/') ?: site->default_page ?: 'home';
+	return trim(Path::diff(strtok($_SERVER['REQUEST_URI'], '?'), __RELROOT__), '/') ?: site->default_page ?: 'home';
 };
 
 function select_page_from_url(mixed $default = null) {
-	global $page_selector;
 	$page_selector = get_page_selector_from_url();
 	return select_page($page_selector, $default);
 };
