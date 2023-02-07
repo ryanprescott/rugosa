@@ -6,5 +6,5 @@ Rugosa\hook('head_tag', function() { ?>
 
 Rugosa\hook('head_tag', function () { Rugosa\title_tag(); });
 
-Rugosa\hook('head_tag');
+Rugosa\head();
 ?>

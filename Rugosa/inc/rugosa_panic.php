@@ -3,6 +3,36 @@ namespace Rugosa;
 function panic($errno = null, $errstr = null, $errfile = null, $errline = null) {
 while (ob_get_level()) { ob_end_clean(); }
 http_response_code('500');
+
+$undefinedConstantPrefix = 'Undefined constant';
+$isUndefinedConstant = substr($errstr, 0, strlen($undefinedConstantPrefix)) === $undefinedConstantPrefix;
+
+if ($isUndefinedConstant) {
+    $rugosaNamespacePrefix = 'Rugosa\\';
+
+    preg_match('/"([^"]+)"/', $errstr, $matches);
+    [, $constantName] = $matches ?: [];
+    if (substr($constantName, 0, strlen($rugosaNamespacePrefix))) {
+        [, $normalizedName] = explode('\\', $constantName);
+        switch($normalizedName) {
+            case 'sites':
+                $errstr .= '. Did you forget to put your code in the `after_load_sites` hook?';
+                break;
+            case 'pages':
+                $errstr .= '. Did you forget to put your code in the `after_load_pages` hook?';
+                break;
+            case 'site':
+                $errstr .= '. Did you forget to put your code in the `after_select_site` hook?';
+                break;
+            case 'page':
+                $errstr .= '. Did you forget to put your code in the `after_select_page` hook?';
+                break;
+            default:
+                
+        }
+    }
+}
+
 ?>
 <html>
 <head>

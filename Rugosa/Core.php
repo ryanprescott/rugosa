@@ -280,13 +280,14 @@ function select_site() {
 	}
 
 	foreach($args as $selector) {
-		if ($siteCollection->has($selector)) {
-			define('Rugosa\site', $siteCollection->get($selector));
+		$site = $siteCollection->has($selector) ? $siteCollection->get($selector) : null;
+		if ($site instanceof Site) {
+			define('Rugosa\site', $site);
 			break;
 		}
 	}
 
-	if (site) {
+	if (defined('Rugosa\site')) {
 		include_once(site->file);
 		return true;
 	} else {
@@ -296,6 +297,8 @@ function select_site() {
 };
 
 function select_page() {
+	hook('before_select_page');
+
 	$args = func_get_args();
 	if ($args[0] instanceof Collection) {
 		$pageCollection = array_shift($args);
@@ -307,13 +310,17 @@ function select_page() {
 	}
 
 	foreach($args as $selector) {
-		if ($pageCollection->has($selector)) {
-			define('Rugosa\page', $pageCollection->get($selector));
+		error_log($selector);
+		$page = $pageCollection->has($selector) ? $pageCollection->get($selector) : null;
+		error_log($page instanceof Page);
+		if ($page instanceof Page) {
+			define('Rugosa\page', $page);
 			break;
 		}
 	}
 
 	if (defined('Rugosa\page')) {
+		hook('after_select_page');
 		return true;
 	} else {
 		trigger_error('No page was found matching the selectors specified: ' . join(', ', $args), E_USER_ERROR);
@@ -322,7 +329,7 @@ function select_page() {
 };
 
 function get_page_selector_from_url() {
-	return trim(Path::diff(strtok($_SERVER['REQUEST_URI'], '?'), __RELROOT__), '/') ?: site->default_page ?: 'home';
+	return trim(Path::diff(get_relative_canonical(), __RELROOT__), '/') ?: site->default_page ?: 'home';
 };
 
 function select_page_from_url(mixed $default = null) {
@@ -351,8 +358,9 @@ function select_theme() {
 	}
 
 	foreach($args as $selector) {
-		if ($themeCollection->has($selector)) {
-			define('Rugosa\theme', $themeCollection->get($selector));
+		$theme = $themeCollection->has($selector) ? $themeCollection->get($selector) : null;
+		if ($theme instanceof Theme) {
+			define('Rugosa\theme', $theme);
 			break;
 		}
 	}
@@ -377,13 +385,14 @@ function select_template() {
 	}
 
 	foreach($args as $selector) {
-		if ($templateCollection->has($selector)) {
-			define('Rugosa\template', $templateCollection->get($selector));
+		$template = $templateCollection->has($selector) ? $templateCollection->get($selector) : null;
+		if ($template) {
+			define('Rugosa\template', $template);
 			break;
 		}
 	}
 
-	if (defined('Rugosa\template')) {
+	if (defined('Rugosa\template') && template instanceof Template) {
 		return true;
 	} else {
 		trigger_error('No template was found matching the selectors specified: ' . join(', ', $args), E_USER_ERROR);
@@ -459,18 +468,29 @@ function init() {
 	exit();
 };
 
-function head_tag() {
+function head() {
 	echo "<head>";
 	hooks->head_tag->execute();
 	echo "</head>";
 }
 
-function title_tag() {
+function title_string() {
 	if (site->title || page->title) {
 		$titleString = (page->title ?? '') . ((page->title && site->title) ? ' - ' : '') . (site->title ?? '');
-		echo "<title>$titleString</title>";
+		return $titleString;
 	}
 };
+
+function title_tag() {
+	echo '<title>' . title_string() . '</title>';
+};
+function get_canonical() {
+	return __WEBROOT__ . get_relative_canonical();
+}
+
+function get_relative_canonical() {
+	return strtok($_SERVER['REQUEST_URI'], '?');
+}
 
 /*
 

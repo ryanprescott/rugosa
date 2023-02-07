@@ -7,7 +7,7 @@ theme=smart
 
 /* You can put site specific code here */
 
-$logo = function () {
+function logo() {
     return '<span class="rugosa"></span>&nbsp;' . Rugosa\site->title;
 }
 
