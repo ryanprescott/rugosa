@@ -310,9 +310,7 @@ function select_page() {
 	}
 
 	foreach($args as $selector) {
-		error_log($selector);
 		$page = $pageCollection->has($selector) ? $pageCollection->get($selector) : null;
-		error_log($page instanceof Page);
 		if ($page instanceof Page) {
 			define('Rugosa\page', $page);
 			break;
@@ -491,24 +489,5 @@ function get_canonical() {
 function get_relative_canonical() {
 	return strtok($_SERVER['REQUEST_URI'], '?');
 }
-
-/*
-
-Old Helpers
-
-$r->logo =
-function() use ($r) {
-?><?=$r->site->title?><?php
-};
-
-$r->title_tag = 
-function() use ($r) {
-	if ($r?->site?->title || $r?->page?->title) {
-		$titleString = ($r?->page?->title ?? '') . (($r?->page?->title && $r?->site?->title) ? ' - ' : '') . ($r?->site?->title ?? '');
-		echo "<title>$titleString</title>";
-	}
-};
-
-*/
 
 ?>
