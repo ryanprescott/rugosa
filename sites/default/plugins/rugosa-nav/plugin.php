@@ -12,8 +12,9 @@ function build() {
 			$active = \Rugosa\page->name === $page->name;
 			$classAttr = $active ? ' class="active"' : '';
 			if ($page->title && $page->name && !$page->hidden) {
+				$route = \Rugosa\Path::combine(__WEBROOT__, $page->name);
 				echo <<<NAVLINK
-					<a href="<?=\Rugosa\Path::combine(__WEBROOT__, $page->name)?>"><li<?=$classAttr?>><?=$page->title?></li></a>
+					<a href="$route"><li$classAttr>$page->title</li></a>
 				NAVLINK;
 			}
 		}
