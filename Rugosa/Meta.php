@@ -1,6 +1,10 @@
 <?php namespace Rugosa;
 class Meta {
-    public ?Plugin $plugin;
+    public Plugin|null $_plugin;
+
+    function get_plugin() {
+        return clone $this->_plugin;
+    }
 }
 
 ?>

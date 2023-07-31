@@ -58,7 +58,7 @@ const themes = new Collection;
 const pages = new Collection;
 const templates = new Collection;
 const plugins = new Collection;
-const meta = new Meta();
+const meta = new Meta(null);
 
 foreach (available_hooks as $hook) {
 	hooks->set($hook, new Hook());
@@ -199,10 +199,16 @@ function load_plugin(string $path) {
 	$block['templates'] = import_templates($path);
 	$plugin = new Plugin($block);
 
+	// Do not get/set this property directly within plugin code.
+	// Please use the meta->get_plugin() method instead, as this
+	// will return a cloned instance that you can use for the
+	// entire lifecycle of your plugin.
+
 	$meta = meta;
-	$meta->plugin = $plugin;
+
+	$meta->_plugin = $plugin;
 	include_once($def);
-	$meta->plugin = null;
+	$meta->_plugin = null;
 
 	if (!plugins->add($plugin)) {
 		trigger_error("load_plugin: Plugin '". $plugin->name . "' at '{$path}' could not be loaded either because it has no name, or it is a duplicate of an already loaded plugin.");
